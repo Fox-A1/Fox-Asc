@@ -1,0 +1,345 @@
+--awall:)
+local scan = {}
+local aa = {}
+local ranchat = false
+local raichat = false
+local rchats = false
+local tp = false
+local aas = false
+local anpull = false
+
+function greenbox(x,y) -- tile x,tile y
+sendPacketRaw(true, {
+    type = 38,
+    netid =  string.format("%02d%02d", y, x),
+})
+end
+function visualarrow(a,b)
+sendPacketRaw(true, {
+    type = 37,
+    netid =  a,
+    padding1 = b and 1 or 0
+})
+end
+function aichat(z)
+  x = GetLocal().posX//32+1
+  y = GetLocal().posY//32
+  w = false
+    local netids = math.random(50000, 100000)
+    xPos,yPos = w and x or x * 32,w and y or y * 32
+    sendVariant({
+        v1 = "OnSpawn",
+        v2 = [[
+spawn|avatar
+netID|]] .. netids .. [[
+userID|-1
+colrect|0|0|20|30
+posXY|]] .. xPos .. [[|]] .. yPos .. [[
+name|server
+invis|1
+mstate|1
+smstate|2
+]]
+    })
+    sendVariant({
+        v1 = "OnTalkBubble",
+        v2 = netids,
+        v3 = "Fox-A: "..z,
+        v4 = 1
+    }, -1)
+    sendVariant({
+        v1 = "OnRemove",
+        v2 = "netID|" .. netids,
+        v3 = "pId|-1"
+    })
+end
+
+AddHook(function(a)
+  if a.v1:find("OnTalkBubble") and a.v3:find("(%S+) ai") then
+    if a.v2 == GetLocal().netID then
+    runThread(function(p)
+      CSleep(1500)
+      name = GetLocal().name
+      aichat("Hi "..name.." :)")
+      CSleep(1500)
+      aichat("Bisa Aku Bantu?")
+    end)
+    end
+  end
+  if a.v1:find("OnTalkBubble")and a.v3:find("(%S+) fitur")then
+    if a.v2 == GetLocal().netID then
+    aichat("Sabar Ya.. :)")
+    runThread(function(p)
+      CSleep(1500)
+      fitur = {
+        "add_label_with_icon|big|Ini Dia fitur Ku|left|2|",
+        "add_textbox|Baru Dikit Sih :) // Total: 4|",
+        "add_spacer|small|",
+        "add_label_with_icon|small|1. Scan Item Di World // Tolong scan|left|482|",
+        "add_label_with_icon|small|2. Chat Rainbow/Random // Tolong ubah chat|left|482|",
+        "add_label_with_icon|small|3. Matematika // Tolong mtk|left|482|",
+        "add_label_with_icon|small|4. Teleport // Tolong tp mode|left|482|",
+      }
+      SendVariant({v1 = "OnDialogRequest",v2 = table.concat(fitur, "\n"),})
+    end)
+    end
+  end
+  if a.v1:find("OnTalkBubble")and a.v3:find("(%S+) scan")then
+    if a.v2 == GetLocal().netID then
+    runThread(function(p)
+    aichat("Sabar Yaa..")
+    for z, obj in pairs(GetObjectList())do
+      table.insert(scan, "add_label_with_icon_button|small|"..growtopia.getItemName(obj.itemid)..":"..obj.amount.."|left|"..obj.itemid.."|"..z.."|\n")
+      table.insert(aa,{g=z,id=obj.itemid})
+      end
+      CSleep(1500)
+      SendVariant({
+    v1 = "OnDialogRequest",
+    v2 = "add_label_with_icon|big|Hasil Dri Scan Di World Ini :)|left|32|\nadd_spacer|small|\n"..table.concat(scan).."\nadd_spacer|small|\nend_dialog|world_scan|Close||",
+  },-1,200)
+    end)
+    end
+end
+
+if a.v1:find("OnTalkBubble")and a.v3:find("(%S+) ubah chat")then
+  if a.v2 == GetLocal().netID then
+  aichat("Jadi Apa? rainbow, random, /matikan")
+  rchats = true
+  end
+end
+  if a.v1:find("OnTalkBubble")and a.v3:match("(%S+)")=="rainbow"then
+    if rchats==true then
+    if a.v2 == GetLocal().netID then
+      raichat = true
+      aichat("Rainbow Chat Sudah Aktif :)")
+      rchats = false
+    end
+    end
+    end
+    if a.v1:find("OnTalkBubble")and a.v3:match("(%S+)")=="random"then
+    if rchats==true then
+    if a.v2 == GetLocal().netID then
+      ranchat = true
+      aichat("Random Color Chat+Emoji Sudah Aktif :)")
+      rchats = false
+    end
+    end
+    end
+    
+    if a.v1:find("OnTalkBubble")and a.v3:find("(%S+) mtk")then
+      runThread(function(p)
+      if a.v2==GetLocal().netID then
+        aichat("Sabar Ya..")
+        CSleep(1500)
+        mtks={
+          "add_label_with_icon|big|Ini Dia Fitur Matematika|left|2|",
+          "add_spacer|small|",
+          "add_text_input|input1|Angka 1:||10|",
+          "add_text_input|input2|Angka 2:||10|",
+          "add_checkbox|tambah|(+)|0|",
+          "add_checkbox|kurang|(-)|0|",
+          "add_checkbox|kali|(x)|0|",
+          "add_checkbox|bagi|(/)|0|",
+          "add_spacer|small|",
+          "hasilbrek",
+          "add_spacer|small|",
+          "add_button|count|Hitung Ya|"
+        }
+        sendVariant({v1="OnDialogRequest",v2=table.concat(mtks,"\n"),})
+        end
+      end)
+    end
+  
+  if a.v1:find("OnTalkBubble") and a.v3:find("(%S+) tp mode") then
+    if a.v2==GetLocal().netID then
+    aichat("Teleport Mode Sudah Aktif :) // Matiin Pake: tolong tp mati")
+    tp = true
+    end
+elseif a.v1:find("OnTalkBubble") and a.v3:find("(%S+) tp mati") then
+  if a.v2==GetLocal().netID then
+    if tp == true then
+        aichat("Teleport Mode Sudah Mati :(")
+        tp = false
+    end
+end
+end
+
+if a.v1 == "OnConsoleMessage" and a.v2:find("Collected") then
+            local text = a.v2:match("(.+)")
+            local jumlah = a.v2:match("(%d+)")
+            aichat("Kamu "..text)
+end
+
+if a.v1:find("OnConsoleMessage")and a.v2:find("World Locked")then
+  runThread(function(p)
+    CSleep(750)
+    aichat("Scan World..")
+    CSleep(1500)
+    for _, tile in pairs(GetTiles())do
+      if tile.fg == 758 and tile.fg >= 100 then
+        aichat("World Reme/Qeme, Kamu Mau Main Reme/Qeme? yaa/gaa")
+        aas = true
+      else
+        aichat("Oh Bukan World Reme/Qeme Ok Deh")
+      end
+    end
+  end)
+end
+if a.v1:find("OnTalkBubble")and a.v3:find("yaa")then
+  if a.v2 == GetLocal().netID then
+    if aas == true then
+  aichat("Mau Main Ya, Selalu Hati-Hati Dan Jangan Lupa Rec/Record Yaa..")
+end
+end
+if a.v1:find("OnTalkBubble")and a.v3:find("gaa")then
+  if a.v2 == GetLocal().netID then
+    if aas == true then
+        aichat("Oh Ga Mau Main, Hidupin Anti Pull? hidupin/jangan")
+    end
+  end
+end
+if a.v1:find("OnTalkBubble")and a.v3:find("hidupin")then
+  if a.v2 == GetLocal().netID then
+    if aas == true then
+  aichat("Anti Pull Sudah Aktif Ya..")
+  anpull = true
+  aas = false
+end
+end
+if a.v1:find("OnTalkBubble")and a.v3:find("jangan")then
+  if a.v2 == GetLocal().netID then
+    if aas == true then
+        aichat("Anti Pull Tidak Aktif..")
+        anpull = false
+        aas = false
+    end
+  end
+end
+if a.v1:find("OnConsoleMessage")and a.v2:find("(.+%spulls%s.+)")
+if anpull==true then
+SendPacket(2,"action|respawn")
+  end
+end
+
+end,"OnVariant")
+   
+   AddHook(function(b,a)
+     if a:find("dialog_return\ndialog_name|world_scan\n")and a:find("buttonClicked|(%d+)") then
+    ids = tonumber(a:match("|(%d+)"))
+    for _, zz in ipairs(aa)do
+      if zz.g==tonumber(ids)then
+        visualarrow(zz.id, true)
+        aichat("Ikutin Tandanya Yaa")
+        aa = {}
+      scan = {}
+      end
+    end
+     end
+     
+     if a:find("/matikan")then
+      raichat = false
+      ranchat = false
+      aichat("Chat Mode Sudah Mati :(")
+     end
+  if a:find("\n|text") and not a:find("|text|/") and not a:find("|text|%((%w+)%)") then
+tks = a:match("\n|text|(.+)")
+if GetLocal().netID == GetLocal().netID then
+  local colors = { "`1", "`2", "`3", "`4", "`5", "`6", "`7", "`8", "`9", "`w" , "`b" , "`#" , "`c" , "`e" , "`r" , "`t" , "`o" , "`p" , "`a" , "`s" , "`^" , "`@" , "`$" , "`&" , "`!" }
+  --//--
+  local emots = { "sigh" , "mad" , "smile" , "tongue" , "wow" , "no" , "shy" , "wink" , "music" , "lol" , "yes" , "love" , "megaphone" , "heart" , "cool" , "kiss" , "agree" , "see-no-evil" , "dance" , "build" , "oops" , "sleep" , "punch" , "bheart" , "cry" , "party" , "wl" , "grow" , "gems" , "gtoken" , "vend" , "bunny" , "cactus" , "peace" , "terror" , "troll" , "evil" , "pine" , "alien" , "football" , "fireworks" , "pizza" , "clap" , "song" , "ghost" , "halo" , "nuke" , "turkey" , "gift" }
+  --//--
+if ranchat then
+local random_color = colors[math.random(1, #colors)]
+local random_emot = emots[math.random(1, #emots)]
+SendPacket(2,"action|input\n|text|("..random_emot..")"..random_color.." : "..tks)
+return true
+end
+if raichat then
+  r = ""
+  for q = 1,#tks do
+      r = r..colors[math.random(1, #colors)]..tks:sub(q,q)
+  end
+  SendPacket(2,"action|input\n|text|"..r)
+return true
+end
+end
+end
+
+if a:find("buttonClicked|count")and a:find("input1|(%d+)")and a:find("input2|(%d+)")and a:find("tambah|1")then
+    runThread(function(p)
+      aichat("Tunggu Hasil Ya..")
+    a,b = a:match("input1|(%d+)"),a:match("input2|(%d+)")
+    hasil = a+b
+    mtks[10]="add_label_with_icon|small|Ini Hasil Dari "..a.." + "..b.." = "..hasil.."|left|482|"
+    CSleep(1500)
+    sendVariant({v1="OnDialogRequest",v2=table.concat(mtks,"\n"),})
+    end)
+end
+if a:find("buttonClicked|count")and a:find("input1|(%d+)")and a:find("input2|(%d+)")and a:find("kurang|1")then
+    runThread(function(p)
+      aichat("Tunggu Hasil Ya..")
+    a,b = a:match("input1|(%d+)"),a:match("input2|(%d+)")
+    hasil = a-b
+    mtks[10]="add_label_with_icon|small|Ini Hasil Dari "..a.." - "..b.." = "..hasil.."|left|482|"
+    CSleep(1500)
+    sendVariant({v1="OnDialogRequest",v2=table.concat(mtks,"\n"),})
+    end)
+end
+if a:find("buttonClicked|count")and a:find("input1|(%d+)")and a:find("input2|(%d+)")and a:find("kali|1")then
+    runThread(function(p)
+      aichat("Tunggu Hasil Ya..")
+    a,b = a:match("input1|(%d+)"),a:match("input2|(%d+)")
+    hasil = a*b
+    mtks[10]="add_label_with_icon|small|Ini Hasil Dari "..a.." x "..b.." = "..hasil.."|left|482|"
+    CSleep(1500)
+    sendVariant({v1="OnDialogRequest",v2=table.concat(mtks,"\n"),})
+    end)
+end
+if a:find("buttonClicked|count")and a:find("input1|(%d+)")and a:find("input2|(%d+)")and a:find("bagi|1")then
+    runThread(function(p)
+      aichat("Tunggu Hasil Ya..")
+    a,b = a:match("input1|(%d+)"),a:match("input2|(%d+)")
+    hasil = a/b
+    mtks[10]="add_label_with_icon|small|Ini Hasil Dari "..a.." / "..b.." = "..hasil.."|left|482|"
+    CSleep(1500)
+    sendVariant({v1="OnDialogRequest",v2=table.concat(mtks,"\n"),})
+    end)
+end
+
+if a:find("action|respawn")then
+  aichat("Lol Mati")
+end
+
+  
+   end,"OnSendPacket")
+  
+  AddHook(function(r)
+    if r.state == 2608 or r.state == 2592 or r.state == 2576 or r.state == 2560 then
+      if tp==true then
+local prevX, prevY = GetLocal().posX // 32, GetLocal().posY // 32
+local totalDistance = 0
+local function calculateDistance(x1, y1, x2, y2)
+    return math.sqrt((x2 - x1)^2 + (y2 - y1)^2)
+end
+local function updateDistance()
+    local currentX, currentY = r.px, r.py
+    local distance = calculateDistance(prevX, prevY, currentX, currentY)
+    if distance > 0 then
+        totalDistance = totalDistance + distance
+        prevX, prevY = currentX, currentY
+    end
+end
+runThread(function(p)
+updateDistance()
+CSleep(50)
+greenbox(r.px,r.py)
+FindPath(r.px,r.py)
+CSleep(25)
+aichat("Total Jarak Sepanjang Jalur: "..math.floor(totalDistance))
+end)
+end
+end
+
+end,"OnSendPacketRaw")
+  
+aichat("Fox Assistant Telah Aktif :)")
